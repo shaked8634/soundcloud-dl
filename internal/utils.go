@@ -68,25 +68,6 @@ func chooseQuality(qualities []string) string {
 	return q
 }
 
-func getHighestQuality(qualities []string) string {
-	allQualities := []string{"high", "medium", "low"}
-	var in = func(a string, list []string) bool {
-		for _, b := range list {
-			if b == a {
-				return true
-			}
-		}
-		return false
-	}
-
-	for _, q := range allQualities {
-		if in(q, qualities) {
-			return q
-		}
-	}
-	return ""
-}
-
 // select a url to download
 func selectSearchUrl(searches *soundcloud.SearchResult) *soundcloud.SoundData {
 
@@ -152,18 +133,25 @@ func getPlaylistDownloadTracks(soundData *soundcloud.SoundData, clientId string)
 }
 
 // get a final track to be downloaded
-// if bestQuality is false it will prompt the user to choose a quality
-func getTrack(downloadTracks []soundcloud.DownloadTrack, bestQuality bool) soundcloud.DownloadTrack {
-
-	// show available download options
-	qualities := getQualities(downloadTracks)
-	if !bestQuality {
-		defaultQuality = chooseQuality(qualities)
+// if quality was not passed, it will prompt the user to choose a quality
+func getTrack(downloadTracks []soundcloud.DownloadTrack, quality string) soundcloud.DownloadTrack {
+	availQualities := getQualities(downloadTracks)
+	var qualityToDl string
+	if quality == "" {
+		// show available download options
+		qualityToDl = chooseQuality(availQualities)
 	} else {
-		defaultQuality = getHighestQuality(qualities)
+		// choosing the highest possible quality according to user's choice
+		for _, q := range availQualities {
+			qualityToDl = q
+			if q == quality {
+				break
+			}
+		}
+
 	}
 
-	return chooseTrackDownload(downloadTracks, defaultQuality)
+	return chooseTrackDownload(downloadTracks, qualityToDl)
 
 }
 

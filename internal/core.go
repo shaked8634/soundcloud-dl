@@ -2,6 +2,7 @@ package internal
 
 import (
 	"fmt"
+	"os"
 	"strings"
 	"sync"
 
@@ -10,13 +11,12 @@ import (
 )
 
 var (
-	defaultQuality = "low"
-	soundData      = &soundcloud.SoundData{}
-	SearchLimit    = 6
-	offset         = 0
+	soundData   = &soundcloud.SoundData{}
+	SearchLimit = 6
+	offset      = 0
 )
 
-func Sc(args []string, downloadPath string, bestQuality bool, search bool) {
+func Sc(args []string, downloadPath string, quality string, search bool) {
 
 	url := ""
 	if len(args) > 0 {
@@ -32,6 +32,10 @@ func Sc(args []string, downloadPath string, bestQuality bool, search bool) {
 	if clientId == "" {
 		fmt.Println("Something went wrong while getting the Client Id!")
 		return
+	}
+	if quality != "" && quality != "low" && quality != "medium" && quality != "high" {
+		fmt.Printf("Invalid quality value: %s (allowed: low, medium, high)\n", quality)
+		os.Exit(1)
 	}
 	// --search-and-download
 	if search {
@@ -64,9 +68,8 @@ func Sc(args []string, downloadPath string, bestQuality bool, search bool) {
 
 			go func(dlT []soundcloud.DownloadTrack) {
 				defer wg.Done()
-				// bestQuality is true to avoid prompting the user for quality choosing each time and speed up
 				// TODO: get a single progress bar, this will require the use of "https://github.com/cheggaaa/pb" since the current pb doesn't support download pool (I think)
-				t := getTrack(dlT, true)
+				t := getTrack(dlT, quality)
 				fp := soundcloud.Download(t, downloadPath)
 
 				// silent indication of already existing files
@@ -85,7 +88,7 @@ func Sc(args []string, downloadPath string, bestQuality bool, search bool) {
 
 	downloadTracks := soundcloud.GetFormattedDL(soundData, clientId)
 
-	track := getTrack(downloadTracks, bestQuality)
+	track := getTrack(downloadTracks, quality)
 	filePath := soundcloud.Download(track, downloadPath)
 
 	// add tags
