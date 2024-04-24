@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"strings"
+	"sync"
 
 	"github.com/AYehia0/soundcloud-dl/internal"
 	"github.com/AYehia0/soundcloud-dl/pkg/theme"
@@ -30,7 +31,17 @@ var rootCmd = &cobra.Command{
 		}
 		// run the core app
 		// FIXME: Probably not the best thing to do lol, it's better to just pass it to the function, who cares.
-		internal.Sc(args, DownloadPath, Quality, Search)
+
+		if len(args) == 0 {
+			args = append(args, "")
+		}
+
+		wg := sync.WaitGroup{}
+		for _, arg := range args {
+			wg.Add(1)
+			go internal.Sc(arg, DownloadPath, Quality, Search, &wg) //Currently unrestricted may need mex concurrent processes
+		}
+		wg.Wait()
 	},
 	PreRun: func(cmd *cobra.Command, args []string) {
 		cmd.Flags().Visit(func(f *pflag.Flag) {

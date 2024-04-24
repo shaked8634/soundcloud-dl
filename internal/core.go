@@ -16,13 +16,8 @@ var (
 	offset      = 0
 )
 
-func Sc(args []string, downloadPath string, quality string, search bool) {
-
-	url := ""
-	if len(args) > 0 {
-		url = args[0]
-	}
-
+func Sc(url string, downloadPath string, quality string, search bool, wg *sync.WaitGroup) {
+	defer wg.Done()
 	if url != "" && !initValidations(url) {
 		return
 	}
